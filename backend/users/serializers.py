@@ -1,4 +1,4 @@
-﻿from rest_framework import serializers
+from rest_framework import serializers
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
 from .models import UserProfile
@@ -64,16 +64,12 @@ class LoginSerializer(serializers.Serializer):
     password = serializers.CharField(write_only=True, required=True)
 
 
-class ProfileUpdateSerializer(serializers.ModelSerializer):
+class ProfileUpdateSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=150, required=False)
     address = serializers.CharField(max_length=255, required=False, allow_blank=True)
     city = serializers.CharField(max_length=100, required=False, allow_blank=True)
     postal_code = serializers.CharField(max_length=20, required=False, allow_blank=True)
     country = serializers.CharField(max_length=100, required=False, allow_blank=True)
-
-    class Meta:
-        model = User
-        fields = ['name', 'address', 'city', 'postal_code', 'country']
 
     def update(self, instance, validated_data):
         if 'name' in validated_data:
@@ -88,4 +84,6 @@ class ProfileUpdateSerializer(serializers.ModelSerializer):
             if field in validated_data:
                 setattr(profile, field, validated_data[field])
         profile.save()
+        instance.profile = profile
         return instance
+
