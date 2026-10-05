@@ -1,69 +1,180 @@
-import Image from "next/image";
+﻿import React from 'react';
+import Link from 'next/link';
+import { ArrowRight, Sparkles, Shield, Compass, CheckCircle } from 'lucide-react';
+import { productsApi } from '@/services/api';
+import ProductGrid from '@/components/products/ProductGrid';
+import { Product } from '@/types';
 
-export default function Home() {
+// Server-side fetching with fallback
+async function getFeaturedData() {
+  try {
+    const productsRes = await productsApi.getProducts({ featured: true });
+    const categoriesRes = await productsApi.getCategories();
+    return {
+      featuredProducts: productsRes.results,
+      categories: categoriesRes,
+    };
+  } catch (error) {
+    console.warn('Backend unavailable during build/SSR, falling back to empty list', error);
+    return {
+      featuredProducts: [] as Product[],
+      categories: [],
+    };
+  }
+}
+
+export default async function HomePage() {
+  const { featuredProducts, categories } = await getFeaturedData();
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
+    <div className="space-y-16 sm:space-y-24 pb-16">
+      {/* 1. Hero Section */}
+      <section className="relative overflow-hidden bg-slate-900 text-white py-20 lg:py-32">
+        {/* Subtle decorative background gradient */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(99,102,241,0.25),rgba(255,255,255,0))]" />
+        
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-400/20 text-indigo-300 text-xs font-semibold mb-6">
+            <Sparkles className="w-3.5 h-3.5" /> Curated Lifestyle & Tech Essentials
+          </div>
+
+          <h1 className="text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight max-w-4xl mx-auto leading-tight sm:leading-none">
+            Discover products <br className="hidden sm:inline" />
+            <span className="bg-gradient-to-r from-indigo-400 via-purple-300 to-pink-300 bg-clip-text text-transparent">
+              you&apos;ll truly love.
+            </span>
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+
+          <p className="mt-6 text-base sm:text-lg text-slate-300 max-w-2xl mx-auto leading-relaxed font-normal">
+            ShopSphere is a modern, design-forward storefront featuring refined electronics, minimalist apparel, and artisan homeware. Engineered for quality, aesthetics, and reliability.
+          </p>
+
+          <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Link
+              href="/shop"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm shadow-lg shadow-indigo-600/30 transition-all duration-200 hover:-translate-y-0.5"
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
+              Shop Now <ArrowRight className="w-4 h-4" />
+            </Link>
+            <Link
+              href="/shop"
+              className="w-full sm:w-auto inline-flex items-center justify-center px-8 py-3.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold text-sm backdrop-blur-sm transition-all duration-200"
             >
-              Learning
-            </a>{" "}
-            center.
+              Browse Categories
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* 2. Featured Products Section */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
+          <div>
+            <span className="text-xs font-bold uppercase tracking-wider text-indigo-600 block mb-1">
+              Curated Selection
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+              Featured Products
+            </h2>
+          </div>
+          <Link
+            href="/shop"
+            className="inline-flex items-center gap-1.5 text-sm font-semibold text-indigo-600 hover:text-indigo-700 transition-colors group"
+          >
+            Explore all items <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+          </Link>
+        </div>
+
+        <ProductGrid
+          products={featuredProducts}
+          emptyTitle="Catalog Loading"
+          emptySubtitle="Featured products will appear as soon as the backend API is live."
+        />
+      </section>
+
+      {/* 3. Category Showcase Grid */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center max-w-2xl mx-auto mb-10">
+          <span className="text-xs font-bold uppercase tracking-wider text-indigo-600 block mb-1">
+            Browse By Department
+          </span>
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+            Explore Categories
+          </h2>
+          <p className="mt-2 text-sm text-slate-500">
+            From smart desk equipment to organic textiles, find what fits your routine.
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+          {[
+            { name: 'Electronics', slug: 'electronics', icon: '⚡', desc: 'Audio & Gadgets' },
+            { name: 'Clothing', slug: 'clothing', icon: '👕', desc: 'Organic Textiles' },
+            { name: 'Home & Living', slug: 'home-living', icon: '☕', desc: 'Decor & Living' },
+            { name: 'Beauty', slug: 'beauty', icon: '✨', desc: 'Clean Skincare' },
+            { name: 'Accessories', slug: 'accessories', icon: '🎒', desc: 'Leather & Carry' },
+          ].map((cat) => (
+            <Link
+              key={cat.slug}
+              href={`/shop?category=${cat.slug}`}
+              className="group p-6 bg-white rounded-2xl border border-slate-200 hover:border-indigo-300 hover:shadow-md transition-all duration-200 text-center flex flex-col items-center justify-center"
+            >
+              <div className="w-12 h-12 rounded-xl bg-slate-50 group-hover:bg-indigo-50 flex items-center justify-center text-2xl mb-3 transition-colors">
+                {cat.icon}
+              </div>
+              <h3 className="font-bold text-slate-900 text-sm group-hover:text-indigo-600 transition-colors">
+                {cat.name}
+              </h3>
+              <p className="text-xs text-slate-400 mt-1">{cat.desc}</p>
+            </Link>
+          ))}
         </div>
-      </main>
+      </section>
+
+      {/* 4. Brand Value / Full-Stack Showcase Banner */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="bg-gradient-to-br from-indigo-900 via-slate-900 to-slate-950 text-white rounded-3xl p-8 sm:p-12 lg:p-16 relative overflow-hidden shadow-xl">
+          <div className="relative z-10 max-w-2xl">
+            <span className="text-xs font-bold uppercase tracking-wider text-indigo-400 block mb-2">
+              Full-Stack Architecture
+            </span>
+            <h2 className="text-2xl sm:text-4xl font-extrabold tracking-tight leading-tight">
+              Engineered with Precision and Security
+            </h2>
+            <p className="mt-4 text-slate-300 text-sm sm:text-base leading-relaxed">
+              ShopSphere combines modern Next.js client and server components with Django REST Framework&apos;s transactional security. All prices, totals, and inventory are recalculated and verified in PostgreSQL.
+            </p>
+
+            <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm text-slate-300">
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />
+                <span>Server-enforced pricing</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />
+                <span>Atomic stock reduction</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />
+                <span>Guest cart persistence</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0" />
+                <span>Token authentication</span>
+              </div>
+            </div>
+
+            <div className="mt-8">
+              <Link
+                href="/shop"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white text-slate-900 font-bold text-sm hover:bg-slate-100 transition-colors shadow-md"
+              >
+                Start Exploring Catalog <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
